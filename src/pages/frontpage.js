@@ -1,50 +1,52 @@
 import React from "react";
-import { useEffect } from "react";
 import { useSelector, useDispatch, connect } from 'react-redux';
 
-/*
-            TODO
-    add mapstatetoprops
-*/
-
-function ShopCart() {
-    const shopCart = useSelector(state => state.shopCart);
-    const items = useSelector(state => state.items);
-    const dispatch = useDispatch();
-
-    function handleDelete(type, payload) {
-        dispatch({type: type, payload: payload});
+const mapStateToProps = (state) => {
+    return {
+      shopCart: state.shopCart,
+      items: state.items
     }
+};
 
-    useEffect(() => {
-    }, [handleDelete]);
+const mapDispatchToProps = (dispatch) => {
+    return {
+      increment: (data) => dispatch({ type: 'shopCart/itemCountChanged', payload: data }),
+      decrement: (data) => dispatch({ type: 'shopCart/itemCountChanged', payload: data }),
+      add_item: (item) => dispatch({ type: 'shopCart/itemAdded', payload: item }),
+      delete_item: (item) => dispatch({ type: 'shopCart/itemRemoved', payload: item })
+    };
+  };
+  
 
-    return (
-        <div>
-            <h1>Shop list:</h1>
-            {shopCart && shopCart.map(item => {
-                return (
-                    <div>Name: {items.find(it => it.id === item.item_id).name} | Count: {item.count} | <button onClick={() => handleDelete('shopCart/itemRemoved', item)}>Delete</button></div>
-                );
-            })}
-        </div>
-    )
+const ShopCart = (props) => {
+    if(props.shopCart.length > 0) {
+        return (
+            <div>
+                <h1>Shop list:</h1>
+                {props.shopCart.map((item, key) => {
+                    return (
+                        <div key={key}>Name: {props.items.find(it => it.id === item.item_id).name} | Count: {item.count} <button onClick={() => props.decrement({id: item.item_id, count: item.count-=1})} disabled={item.count == 1 ? true : false}>-</button> <button onClick={() => props.increment({id: item.item_id, count: item.count+=1})}>+</button>| <button onClick={() => props.delete_item(item)}>Delete</button></div>
+                    );
+                })}
+            </div>
+        )
+    }
 }
 
-export default function Frontpage() {
-    const shopCart = useSelector(state => state.shopCart);
-    const items = useSelector(state => state.items);
-    const dispatch = useDispatch();
+const ShopCar = connect(mapStateToProps, mapDispatchToProps)(ShopCart);
 
+const Frontpage = (props) => {
     return (
         <div>
-            <ShopCart />
+            <ShopCar />
             <h1>Items:</h1>
-            {items.map(item => {
+            {props.items.map((item, key) => {
                 return (
-                    <div>Name: {item.name} | Color: {item.color} | Price: {item.price} | <button onClick={() => dispatch({type: 'shopCart/itemAdded', payload: {item_id: item.id, count: 1}})}>Add to shop list</button></div>
+                    <div key={key}>Name: {item.name} | Color: {item.color} | Price: {item.price} | <button onClick={() => props.add_item({item_id: item.id, count: 1})}>Add to shop list</button></div>
                 );
             })}
         </div>
     );
 }
+
+export default connect(mapStateToProps, mapDispatchToProps)(Frontpage);;
